@@ -8,11 +8,14 @@ import dataStructure.graph;
 import dataStructure.node_data;
 import utils.Point3D;
 
+
 /**
  * This class represents the the robots class and the fields.
  * @author Yossi and Reuven
  *
  */
+
+
 
 public class Robot {
 
@@ -20,21 +23,18 @@ public class Robot {
 	
 	private int id;
 	private int src;
-	private double speed;
 	private graph g;
 	private List<node_data> path;
 	private int dest;
-	private double points;
 	
-	public Robot(int id, int src , int dest, double speed,Point3D pos ,double points, DGraph g){
+	public Robot(int id, int src,int dest,Point3D pos , DGraph g){
 		this.g =g;
 		node_data tmp = this.g.getNode(src);
 		this.pos = tmp.getLocation();
 		this.id = id;
-		this.speed = speed;
+		
 		this.src = src;
 		this.dest = dest;
-		this.points = points;
 		
 	}
 		
@@ -69,27 +69,8 @@ public class Robot {
 		return src;
 	}
 
-
 	public void setSrc(int src) {
 		this.src = src;
-	}
-	
-
-	public double getSpeed() {
-		return speed;
-	}
-
-
-	public void setSpeed(double speed) {
-		this.speed = speed;
-	}
-	
-	public double getPoints(){
-		return points;
-	}
-	
-	public void setPoints(double points){
-		this.points += points;
 	}
 	
 	public int getDest(){

@@ -5,9 +5,9 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,6 +29,10 @@ import dataStructure.Vertex;
 import dataStructure.edge_data;
 import dataStructure.node_data;
 
+
+
+
+
 public class MyGameGUI implements Runnable{
 	
 	private game_service game;
@@ -44,7 +48,7 @@ public class MyGameGUI implements Runnable{
 	private boolean manuel;
 	private Thread play;
 	private automaticGame auto;
-	private manuelGame manu;
+	private manualGame manu;
 	private Timer t;
 
 	private KML_Logger kml;
@@ -61,7 +65,7 @@ public class MyGameGUI implements Runnable{
 		String mode = null;
 		String level;
         
-		do{
+		do{//only get a or A or m or m else will asking again and again
 			mode = JOptionPane.showInputDialog(f, "Enter \"M\" for Manual or \"A\" for auto: ");
 		}while(!mode.equals("A") && !mode.equals("M") && !mode.equals("a") && !mode.equals("m"));
 		
@@ -72,18 +76,18 @@ public class MyGameGUI implements Runnable{
 			manuel = true;
 		
 		int le=-1;
-		do{
+		do{//get number between [0-23] else will ask again and again
         	level = JOptionPane.showInputDialog(f, "Selcet level [0,23]: ");
         	le = Integer.parseInt(level);
 		}while(le<0 && le>23);
         
         
-		kml = new KML_Logger(le);
+		kml = new KML_Logger(le);// initiate KML_Logger
 		
 		
 		
 		try {
-			game = Game_Server.getServer(Integer.parseInt(level));
+			game = Game_Server.getServer(Integer.parseInt(level));//initiate the game
 			
 			String graph = game.getGraph();
 			this.arena = new DGraph();
@@ -101,7 +105,7 @@ public class MyGameGUI implements Runnable{
 			try{
 				line = new JSONObject(info);
 				JSONObject ttt = line.getJSONObject("GameServer");
-				robotNumber = ttt.getInt("robots");
+				robotNumber = ttt.getInt("robots");//getting the number of robots
 			}
 		
 			catch (JSONException e) {e.printStackTrace();}
@@ -110,8 +114,8 @@ public class MyGameGUI implements Runnable{
 			
 			
 			
-			auto = new automaticGame(game);
-			manu = new manuelGame(game);
+			auto = new automaticGame(game);//create automatic and manual game for each case
+			manu = new manualGame(game);
 				
 			
 			
@@ -121,12 +125,14 @@ public class MyGameGUI implements Runnable{
 			StdDraw.setPenRadius(0.03);
 			StdDraw.setPenColor(Color.MAGENTA);
 			StdDraw.setCanvasSize(1000, 500);
-			StdDraw.setXscale(35.186,35.214); //needs to be fixed
-			StdDraw.setYscale(32.099,32.110); //needs to be fixed
+			StdDraw.setXscale(35.186,35.214); 
+			StdDraw.setYscale(32.099,32.110); 
 				
 			init(graph);
 			paintingFruit(fruits);
-			if(manuel)
+			
+			
+			if(manuel)//initiate the robot in the game (put tham on the graph)
 				manu.initiatRobot(robotNumber);
 				
 			else
@@ -152,7 +158,7 @@ public class MyGameGUI implements Runnable{
 	}
 
 	/**
-	 * this methhod Initiates the nodes and edges to a JSONarray from String from game info
+	 * this method Initiates the nodes and edges to a JSONarray from String from game info
 	 * @param String g
 	 */
 	
@@ -184,11 +190,6 @@ public class MyGameGUI implements Runnable{
 				StdDraw.text(x, y+0.0002, Integer.toString(id));
 				node_data n = new Vertex(id, x, y);
 				addVertex(dg, n);
-				
-
-				//				n.getLocation();
-				//				n.getKey();
-
 			
 			}
 
@@ -200,17 +201,6 @@ public class MyGameGUI implements Runnable{
 				
 				dg.connect(src, dest, weight);
 				addEdge(dg , src, dest, weight);
-				
-				
-				//	StdDraw.line();
-				//				DGraph srcConnect = dg.getNode(src);
-				//				DGraph desConnect = dg.getNode(dest);
-
-				//				StdDraw.point(x, y);
-				//				StdDraw.text(x, y, Double.toString(weight));
-
-				//StdDraw.line(x0, y0, x1, y1);
-				//this.connect(src, dest, weight);
 			}
 		}
 		catch (Exception e) {
@@ -219,10 +209,11 @@ public class MyGameGUI implements Runnable{
 		} 
 	}
 	
+	
 	/**
-	 * This method 	lets the user choose a game mode - Manual/Automatic,
+	 * In the constructor we choose witch game to play here the choice has performed,
 	 * by typing 'A' or 'M' in question box.
-	 * sends the choice to the getMenue or to the getAuto methods.
+	 * sends the choice to the getAuto or to the getMenue methods in correlation.
 	 * @throws JSONException
 	 */
 	
@@ -237,6 +228,7 @@ public class MyGameGUI implements Runnable{
 		
 	}
 	
+
 	/**
 	 * This method starts the game as Manual mode.
 	 * @throws JSONException
@@ -244,9 +236,9 @@ public class MyGameGUI implements Runnable{
 	
 	private void getManu() throws JSONException{
 		paintingRobot(convertStringToRobot(game.getRobots()));
-		game.startGame();
+		game.startGame();//starting manual game
 		play = new Thread(this);
-		play.start();
+		play.start();//starting the thread
 		
 		ActionListener something = new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
@@ -268,7 +260,7 @@ public class MyGameGUI implements Runnable{
 			}
 		};
 		
-		t = new Timer(10, something);
+		t = new Timer(20, something);// for every 20 milliseconds the action above will repeat itself
 		t.start();
 	}
 	
@@ -287,7 +279,7 @@ public class MyGameGUI implements Runnable{
 		ActionListener something = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				try{
-					auto.moveRobots();
+					auto.moveRobots();//the main logic action for moving the robots
 				}
 				
 				catch(JSONException er){
@@ -308,10 +300,9 @@ public class MyGameGUI implements Runnable{
 				}
 			}
 		};
-		t = new Timer(1,something);
+		t = new Timer(1,something);//every millisecond it will repeat itself this action
 		t.start();
 	}
-	
 	/**
 	 * This method prints the score in the end of the game.
 	 * the info is from game.toString().
@@ -326,7 +317,6 @@ public class MyGameGUI implements Runnable{
 		StdDraw.setCanvasSize(1,1);
 		JOptionPane.showMessageDialog(Show,"your score is :" + game.toString() );
 	}
-	
 	/**
 	 * This method adds the vertices to the data structure.	
 	 * @param a
@@ -366,6 +356,9 @@ public class MyGameGUI implements Runnable{
 		StdDraw.text((x1+x2*2)/3, (y1+y2*2)/3, String.valueOf(text));
 	}
 	
+	
+	
+	
 	/**
 	 * This method converts String from the game.getFruit().
 	 * It gets a String from Json  and converts it into a fruit with:
@@ -378,7 +371,7 @@ public class MyGameGUI implements Runnable{
 	 * @throws JSONException
 	 */
 
-	private static List<Fruit> convertStringToFruit(List<String> str) throws JSONException{
+	private List<Fruit> convertStringToFruit(List<String> str) throws JSONException{
 		JSONObject f = new JSONObject();
 		List<Fruit> output = new ArrayList<>();
 		int index = 0;
@@ -393,6 +386,7 @@ public class MyGameGUI implements Runnable{
 				
 				Fruit fru = new Fruit(point,value,type);
 				output.add(index,fru);
+				fruitKML(fru);
 			}
 				
 		}	
@@ -406,7 +400,7 @@ public class MyGameGUI implements Runnable{
 	
 	public void fruitKML(Fruit fru){
 		if(kml != null){
-			Date date = new Date();
+			LocalDateTime date = LocalDateTime.now();
 			if(fru.getType()>0)
 				kml.addAMark(date, "apple", fru.getLocation());
 			
@@ -415,6 +409,7 @@ public class MyGameGUI implements Runnable{
 		}
 	}
 	
+
 	/**
 	 * This method converts String from the game.getRobot().
 	 * It gets a String from Json  and converts it into a robot with:
@@ -432,12 +427,10 @@ public class MyGameGUI implements Runnable{
 
 			int id = robot.getInt("id");
 			int src = robot.getInt("src");
-			double speed = robot.getDouble("speed");
 			int dest = robot.getInt("dest");
-			double points = robot.getDouble("value");
 			String pos = robot.getString("pos");
 			Point3D location = new Point3D(pos);
-			Robot tmp = new Robot(id,src,dest,speed,location,points, arena);
+			Robot tmp = new Robot(id,src,dest,location, arena);
 			robotKML(tmp);
 			output.add(tmp);
 		}
@@ -453,7 +446,7 @@ public class MyGameGUI implements Runnable{
 	
 	public void robotKML(Robot bot){
 		if(kml != null){
-			Date date = new Date();
+			LocalDateTime date = LocalDateTime.now();
 			kml.addAMark(date, "robot", bot.getLocation());
 		}
 	}
@@ -500,6 +493,8 @@ public class MyGameGUI implements Runnable{
 		}
 	}
 	
+	
+		
 	/**
 	 * This method paints the new graph every time it gets updated.
 	 * it uses "DoubleBuffering" so it doesn't "flicker"
@@ -548,6 +543,7 @@ public class MyGameGUI implements Runnable{
 		StdDraw.clear();
 	}
 	
+
 	/**
 	 * This method turns the graph in to a mkl String.
 	 */
@@ -558,8 +554,8 @@ public class MyGameGUI implements Runnable{
 			
 			Collection<node_data> vertices = arena.getV();
 			for(node_data v : vertices){
-				Date date = new Date();
-				kml.addAMark(date, "node", v.getLocation());
+				LocalDateTime date = LocalDateTime.now();
+				kml.addAMark(date, "node", v.getLocation());//adding for the kml file all the nodes location
 			}
 			
 			
@@ -567,7 +563,7 @@ public class MyGameGUI implements Runnable{
 				Collection<edge_data> edges = arena.getE(src.getKey());
 				for(edge_data e : edges){
 					node_data dest = arena.getNode(e.getDest());
-					kml.addAPaths(src.getLocation(), dest.getLocation());
+					kml.addAPaths(src.getLocation(), dest.getLocation());//adding for the kml file all the edges location
 				}
 			}
 		}
@@ -575,19 +571,18 @@ public class MyGameGUI implements Runnable{
 	
 	/**
 	 * This method starts the thread of painting the graph, robots and fruits.
-	 * 
 	 */
-	
 	@Override
 	public void run() {
 		while(game.isRunning()){
 			try {
+				Thread.sleep(100);
 				updatePainting();
 				
 				
 			}
 			
-			catch (JSONException e) {
+			catch (JSONException | InterruptedException e) {
 				e.printStackTrace();
 			}
 		}

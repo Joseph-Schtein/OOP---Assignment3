@@ -17,17 +17,18 @@ import dataStructure.DGraph;
 import dataStructure.node_data;
 import utils.Point3D;
 
-/**
- * This class manages the manual mode.
- * the game can not start without creating all of the robots of
- * that level so there is a method that initiates all of the required robots.
- * the manual mode lets the player decide to what vertex the robot will go to
- * and where to  place them.
- * @author Yossi and Reuven
- *
- */
+public class manualGame {
 
-public class manuelGame {
+	
+	/**
+	 * This class manages the manual mode.
+	 * the game can not start without creating all of the robots of
+	 * that level so there is a method that initiates all of the required robots.
+	 * the manual mode lets the player decide to what vertex the robot will go to
+	 * and where to  place them.
+	 * @author Yossi and Reuven
+	 *
+	 */
 
 	private List<Fruit> fruits;
 	private DGraph arena;
@@ -37,7 +38,7 @@ public class manuelGame {
 	private int robotNumber;
 	private List<List<node_data>> paths;
 	
-	public manuelGame(game_service game) throws JSONException{
+	public manualGame(game_service game) throws JSONException{
 		this.game = game;
 		
 		String g = game.getGraph();
@@ -77,13 +78,13 @@ public class manuelGame {
 		List<String> log = game.move();
 		if(log!=null) {
 			
-			for(int j = 0; j < robotNumber && robots.size()!=0 && robots != null; j++){
+			for(int j = 0; j < robotNumber && robots.size()!=0 && robots != null; j++){//I saved the path so when we recreate the robot list I can give back each one his list
 				paths.add(robots.get(j).getPath());
 			}
 			
 			robots = convertStringToRobot(log);
 			
-			for(int j = 0; j < robotNumber && robots.size()!=0 && robots != null; j++){
+			for(int j = 0; j < robotNumber && robots.size()!=0 && robots != null; j++){//returning the robot list
 				if(paths.size()>0 && paths.get(j) != null){
 					robots.get(j).setPath(paths.get(j));
 				}	
@@ -96,14 +97,14 @@ public class manuelGame {
 					JSONObject line = new JSONObject(robot_json);
 					JSONObject ttt = line.getJSONObject("Robot");
 					
-					if( robots.get(i).getPath() == null || robots.get(i).getPath().size()==1) {
+					if( robots.get(i).getPath() == null || robots.get(i).getPath().size()==1) {//only if the robot don't have a path we create a new one for him
 						String choosenNode = JOptionPane.showInputDialog(null, "Enter a node key for id number : " +robots.get(i).getId());
 						int newDetination = Integer.parseInt(choosenNode);
 						robots.get(i).setPath(algo.shortestPath(robots.get(i).getSrc(), newDetination));
 					}
 					
-					List<node_data> check = robots.get(i).getPath();
-					if(check != null && check.size()>1){
+					List<node_data> check = robots.get(i).getPath();//tmp variable
+					if(check != null && check.size()>1){// only if you have a path continue with
 						game.chooseNextEdge(robots.get(i).getId(), robots.get(i).getPath().get(1).getKey());
 						if(check.get(1).getKey() == robots.get(i).getSrc()){	
 							check.remove(1);
@@ -121,7 +122,6 @@ public class manuelGame {
 			}	
 		}	
 	}
-	
 	/**
 	 * The game could not start until all of the robots are placed.
 	 * This method creates all of the robots so the game could start.
@@ -144,6 +144,7 @@ public class manuelGame {
 		}	
 	}
 	
+	
 	/**
 	 * This method parses the Json String to a robot object.
 	 * id, src, speed, dest, value and pos.
@@ -151,6 +152,7 @@ public class manuelGame {
 	 * @return
 	 * @throws JSONException
 	 */
+	
 	
 	private List<Robot> convertStringToRobot(List<String> json) throws JSONException{
 		List<Robot> output = new ArrayList<>();
@@ -160,12 +162,10 @@ public class manuelGame {
 
 			int id = robot.getInt("id");
 			int src = robot.getInt("src");
-			double speed = robot.getDouble("speed");
 			int dest = robot.getInt("dest");
-			double points = robot.getDouble("value");
 			String pos = robot.getString("pos");
 			Point3D location = new Point3D(pos);
-			Robot tmp = new Robot(id,src,dest,speed,location,points, arena);
+			Robot tmp = new Robot(id,src,dest,location, arena);
 			output.add(tmp);
 		}
 		return output;

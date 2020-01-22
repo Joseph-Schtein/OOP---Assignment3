@@ -1,5 +1,6 @@
 package gameClient;
 
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +26,7 @@ import utils.Point3D;
  *
  */
 
+
 public class automaticGame{
 	
 	private List<Fruit> fruits;
@@ -34,6 +36,7 @@ public class automaticGame{
 	private List<Robot> robots;
 	private int robotNumber;
 	
+	
 	/**
 	 * This method initiates the game.
 	 * Parses the "game String" in to a Json object.
@@ -41,6 +44,7 @@ public class automaticGame{
 	 * @param game
 	 * @throws JSONException
 	 */
+	
 	
 	public automaticGame(game_service game) throws JSONException{
 		this.game = game;
@@ -58,7 +62,7 @@ public class automaticGame{
 		
 		String info = game.toString();
 		JSONObject line;
-		try{
+		try{// getting the number of robot in this level
 			line = new JSONObject(info);
 			JSONObject ttt = line.getJSONObject("GameServer");
 			robotNumber = ttt.getInt("robots");
@@ -70,6 +74,7 @@ public class automaticGame{
 		
 	}
 	
+	
 	/**
 	 * This method moves the robots every step to the next closest fruit.
 	 * it  uses the "Triangle inequality" to find what is the closest fruits.
@@ -77,14 +82,15 @@ public class automaticGame{
 	 * @throws JSONException
 	 */
 	
+	
 	public void moveRobots() throws JSONException {
 		List<String> log = null;
-		if(game.timeToEnd()>0){	
+		if(game.isRunning()){	
 			fruits = sortFruit(game.getFruits());
 			log = game.move();
 		}	
 		if(log!=null) {
-			robots = convertStringToRobot(log);
+			robots = convertStringToRobot(log);//sending String and getting list of robot
 			long t = game.timeToEnd();
 			for(int i=0;i<robots.size();i++) {
 				String robot_json = log.get(i);
@@ -92,9 +98,9 @@ public class automaticGame{
 					JSONObject line = new JSONObject(robot_json);
 					JSONObject ttt = line.getJSONObject("Robot");
 					
-					if(robots.get(i).getDest()==-1 && (robots.size()==1 || robots.get(i).getPath() == null)) {
-						edge_data nextEdge = RobotAlgo.findEdge(arena, fruits.get(0));
-						if(robots.get(i).getSrc() != nextEdge.getSrc()){
+					if(robots.get(i).getDest()==-1 && (robots.size()==1 || robots.get(i).getPath() == null)) {//check if any robot need to update his path to the fruit 
+						edge_data nextEdge = RobotAlgo.findEdge(arena, fruits.get(0));// getting the edge from the algorithm
+						if(robots.get(i).getSrc() != nextEdge.getSrc()){//if the robot is on the source of the edge
 							robots.get(i).setPath(algo.shortestPath(robots.get(i).getSrc(), nextEdge.getSrc()));	
 						}	
 						else{
@@ -102,13 +108,13 @@ public class automaticGame{
 						}
 					}
 					
-					List<node_data> check = robots.get(i).getPath();
-					if(check != null && check.size()>1){
+					List<node_data> check = robots.get(i).getPath();//tmp variable for easy work
+					if(check != null && check.size()>1){// only if there isn't a path search for a new one 
 						game.chooseNextEdge(robots.get(i).getId(), robots.get(i).getPath().get(1).getKey());
+						System.out.println("Turn to node: "+robots.get(i).getPath().get(1).getKey()+"  time to end:"+(t/1000));
+						System.out.println(ttt);
 						check.remove(1);
 						robots.get(i).setPath(check);
-						System.out.println("Turn to node: "+robots.get(i).getDest()+"  time to end:"+(t/1000));
-						System.out.println(ttt);
 					}
 					fruits.remove(0);
 				} 
@@ -119,7 +125,7 @@ public class automaticGame{
 			}
 		}	
 	}
-
+	
 	/**
 	 * The game could not start until all of the robots are placed.
 	 * This method creates all of the robots so the game could start.
@@ -158,13 +164,17 @@ public class automaticGame{
 		}
 	}
 
-/**
- * This method parses the Json String to a robot object.
- * id, src, speed, dest, value and pos.
- * @param json
- * @return
- * @throws JSONException
- */
+
+
+
+	/**
+	 * This method parses the Json String to a robot object.
+	 * id, src, speed, dest, value and pos.
+	 * @param json
+	 * @return
+	 * @throws JSONException
+	 */
+
 	
 	private List<Robot> convertStringToRobot(List<String> json) throws JSONException{
 		List<Robot> output = new ArrayList<>();
@@ -174,16 +184,15 @@ public class automaticGame{
 
 			int id = robot.getInt("id");
 			int src = robot.getInt("src");
-			double speed = robot.getDouble("speed");
 			int dest = robot.getInt("dest");
-			double points = robot.getDouble("value");
 			String pos = robot.getString("pos");
 			Point3D location = new Point3D(pos);
-			Robot tmp = new Robot(id,src,dest,speed,location,points, arena);
+			Robot tmp = new Robot(id,src,dest,location, arena);
 			output.add(tmp);
 		}
 		return output;
 	}
+	
 	
 	/**
 	 * This method sorts the fruit by value from high to low.
@@ -244,16 +253,27 @@ public class automaticGame{
 			if(o1 instanceof Fruit && o2 instanceof Fruit){
 				Fruit tmp1 = (Fruit)o1, tmp2 = (Fruit)o2;
 				if(tmp1.getValue()>tmp2.getValue()){
-					return -1; // right is smaller then left
+					return -1;//it is intentional  -1 here because for sorting from the highest to the lowest
 				}
 				else if(tmp1.getValue()<tmp2.getValue()){
 					return 1;
-				}				
+				}
+				
 				else
 					return 0;
 			}
 			else
-				throw new IllegalArgumentException();	
-		}	
+				throw new IllegalArgumentException();
+			
+		}
+		
+		
 	}
+
+
+
+	
+	
 }
+
+
