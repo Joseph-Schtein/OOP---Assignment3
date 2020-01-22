@@ -3,9 +3,12 @@ package gameClient;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import utils.Point3D;
+
+
 
 /**
  * This class represents the KML logger.
@@ -17,6 +20,7 @@ import utils.Point3D;
 
 public class KML_Logger {
 
+	
 	private int scenario;
 	private StringBuilder kmlFile;
 	
@@ -46,7 +50,6 @@ public class KML_Logger {
 		kmlFile.append("      </name>");
 		kmlFile.append("\n");
 	}
-	
 	/**
 	 * This method determines what will the robots, bananas, apples, vertices and edges.
 	 */
@@ -121,7 +124,7 @@ public class KML_Logger {
 		kmlFile.append("\n");
 		kmlFile.append("            <LineStyle>");
 		kmlFile.append("\n");
-		kmlFile.append("             <color>ffff0000</color>");
+		kmlFile.append("             <color>ffff0000</color>");//creating the routes base of the edges graph
 		kmlFile.append("\n");
 		kmlFile.append("             <width>4</width>");
 		kmlFile.append("\n");
@@ -132,17 +135,15 @@ public class KML_Logger {
 
 	}
 	
-
 	
-	public void addAMark(Date date , String idIcon, Point3D location){
+	public void addAMark(LocalDateTime date , String idIcon, Point3D location){
 		
 		kmlFile.append("          <Placemark>");
 		kmlFile.append("\n");
 		kmlFile.append("            <TimeStamp>");
 		kmlFile.append("\n");
 		kmlFile.append("              <when>");
-		kmlFile.append("\n");
-		kmlFile.append(date);//giving a time stamp
+		kmlFile.append(" "+date);//giving a time stamp
 		kmlFile.append("</when>");
 		kmlFile.append("\n");
 		kmlFile.append("            </TimeStamp>");
@@ -164,7 +165,7 @@ public class KML_Logger {
 	public void addAPaths(Point3D src, Point3D dest){
 		kmlFile.append("             <Placemark>");
 		kmlFile.append("\n");
-		kmlFile.append("               <styleUrl>#lines</styleUrl>");
+		kmlFile.append("               <styleUrl>#lines</styleUrl>");//creating the route
 		kmlFile.append("\n");
 		kmlFile.append("			   <LineString>");
 		kmlFile.append("			    <extrude>3</extrude>");
@@ -183,7 +184,7 @@ public class KML_Logger {
 		kmlFile.append("\n");
 		kmlFile.append("			   </LineString>");
 		kmlFile.append("\n");
-		kmlFile.append("             <Placemark>");
+		kmlFile.append("             </Placemark>");
 		kmlFile.append("\n");
 	}
 	
@@ -198,7 +199,7 @@ public class KML_Logger {
 		kmlFile.append("</kml>");//same for KML while it is not clearly see that we open it in the second line
 		
 		String s = String.valueOf(scenario);
-		String output = "/data"+ s + ".KML";// we send it to data file in the project
+		String output =  s + ".KML";// we send it to data file in the project
 		PrintWriter pw = new PrintWriter(new File(output)); 
 		pw.write(kmlFile.toString());
 		pw.close();
