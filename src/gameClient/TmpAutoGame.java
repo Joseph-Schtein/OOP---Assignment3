@@ -13,8 +13,11 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.mysql.fabric.xmlrpc.base.Array;
+
 import Server.Game_Server;
 import Server.game_service;
+import Server.robot;
 import algorithms.Graph_Algo;	
 import algorithms.RobotAlgo;
 import dataStructure.DGraph;
@@ -41,6 +44,7 @@ import utils.Point3D;
 		private int robotNumber;
 		private double[][] dis;
 		private FloydWarshallSolver solver;
+		private List<List<Integer>> robotPath; 
 		
 		/**
 		 * This method initiates the game.
@@ -53,10 +57,13 @@ import utils.Point3D;
 		
 	public TmpAutoGame(game_service game) throws JSONException{
 		this.game = game;
-		
 		String g = game.getGraph();
 		arena = new DGraph();
 		arena.init(g);
+		String res = game.toString();
+		String remark = "This string should be a KML file!!";
+		game.sendKML(remark); // Should be your KML (will not work on case -1).
+		System.out.println(res);
 			
 		double[][] tmp1 = new double[arena.nodeSize()][arena.nodeSize()];
 		dis = new double[arena.nodeSize()][arena.nodeSize()];
@@ -67,8 +74,16 @@ import utils.Point3D;
 		
 		algo = new Graph_Algo();
 		algo.init(arena);
-			
-			
+		
+		List<Integer> robot0 = new ArrayList();
+		List<Integer> robot1 = new ArrayList();
+		List<Integer> robot2 = new ArrayList();
+
+		robotPath = new ArrayList<>();
+		robotPath.add(robot0);
+		robotPath.add(robot1);
+		robotPath.add(robot2);
+
 		fruits = new ArrayList<>();
 		robots = new ArrayList<>();
 			
@@ -113,8 +128,17 @@ import utils.Point3D;
 		return dis;
 	}	
 	
-	
-	
+	public boolean jamming(List<Integer> rp){
+		boolean jam = false;
+		if(rp.get(rp.size()-1) == rp.get(rp.size()-3) && rp.get(rp.size()-1) == rp.get(rp.size()-5))
+			if(rp.get(rp.size()-2) == rp.get(rp.size()-4) && rp.get(rp.size()-2) == rp.get(rp.size()-6)){
+				Fruit tmp = fruits.get(0);
+				fruits.set(0, fruits.get(fruits.size()-1));
+				fruits.add(tmp);
+				jam = true;
+			}
+		return jam;
+	}
 	
 	public List<Fruit> findRatio(List<Fruit> fruitSet, Robot tmp){
 		int robotSrc = tmp.getSrc();
@@ -164,6 +188,7 @@ import utils.Point3D;
 			robots = convertStringToRobot(log);//sending String and getting list of robot
 			long t = game.timeToEnd();
 			for(int i=0;i<robots.size();i++) {
+				boolean stuck = false;
 				fruits = findRatio(fruits, robots.get(i));
 				String robot_json = log.get(i);
 				try {
@@ -171,6 +196,10 @@ import utils.Point3D;
 					JSONObject ttt = line.getJSONObject("Robot");
 					
 					if(robots.get(i).getDest()==-1 && (robots.size()==1 || robots.get(i).getPath() == null)) {//check if any robot need to update his path to the fruit 
+						
+						if (robotPath.get(i).size()>6)
+						stuck = jamming(robotPath.get(i));
+						
 						edge_data nextEdge = RobotAlgo.findEdge(arena, fruits.get(0));// getting the edge from the algorithm
 						if(robots.get(i).getSrc() != nextEdge.getSrc()){//if the robot is on the source of the edge
 							List<Integer> pathInt = solver.reconstructShortestPath(robots.get(i).getSrc(), nextEdge.getSrc());
@@ -194,12 +223,22 @@ import utils.Point3D;
 					}
 					
 					List<node_data> check = robots.get(i).getPath();//tmp variable for easy work
-					if(check != null && check.size()>1){// only if there isn't a path search for a new one 
+					if(check != null && check.size()>1 && !stuck){// only if there isn't a path search for a new one 
+						robotPath.get(i).add(robots.get(i).getPath().get(1).getKey());
 						game.chooseNextEdge(robots.get(i).getId(), robots.get(i).getPath().get(1).getKey());
 						System.out.println("Turn to node: "+robots.get(i).getPath().get(1).getKey()+"  time to end:"+(t/1000));
 						System.out.println(ttt);
 						check.remove(1);
 						robots.get(i).setPath(check);
+					}
+					else {
+						List<node_data> tmp = new ArrayList<node_data>();
+						tmp.add(arena.getNode(33));
+						tmp.add(arena.getNode(32));
+						tmp.add(arena.getNode(34));
+						robots.get(i).setPath(tmp);
+						
+						game.chooseNextEdge(robots.get(i).getId(), robots.get(i).getPath().get(1).getKey());						stuck = false;
 					}
 					fruits.remove(0);
 				} 
@@ -229,19 +268,19 @@ import utils.Point3D;
 			if(i < tmpl.size()){
 				edge_data near = RobotAlgo.findEdge(arena, tmpl.get(i));
 				if(tmpl.get(i).getType()>0){
-					boolean put1 = game.addRobot(near.getSrc());
+					boolean put1 = game.addRobot(34);
 					if(put1)
 						counter++;
 				}
 					
 				else{
-					boolean put2 = game.addRobot(near.getSrc());
+					boolean put2 = game.addRobot(39);
 					if(put2)
 						counter++;
 				}	
 			}
 			else{
-				boolean put3 = game.addRobot(i);
+				boolean put3 = game.addRobot(5);
 				if(put3)
 					counter++;
 			}

@@ -47,7 +47,7 @@ public class MyGameGUI implements Runnable{
 	
 	private boolean manuel;
 	private Thread play;
-	private automaticGame auto;
+	private TmpAutoGame auto;
 	private manualGame manu;
 	private Timer t;
 
@@ -64,7 +64,12 @@ public class MyGameGUI implements Runnable{
 		JFrame f = new JFrame(" The Maze Waze Game ");
 		String mode = null;
 		String level;
-        
+		
+		JFrame login = new JFrame(" The Maze Waze Game  - Login");
+		int id;
+		id = Integer.parseInt(JOptionPane.showInputDialog(login, " Enter ID Number:"));
+		Game_Server.login(id);
+		
 		do{//only get a or A or m or m else will asking again and again
 			mode = JOptionPane.showInputDialog(f, "Enter \"M\" for Manual or \"A\" for auto: ");
 		}while(!mode.equals("A") && !mode.equals("M") && !mode.equals("a") && !mode.equals("m"));
@@ -97,8 +102,7 @@ public class MyGameGUI implements Runnable{
 			algo.init(arena);
 		
 			fruits = convertStringToFruit(game.getFruits());
-			
-		
+					
 			String info = game.toString();
 			JSONObject line;
 			
@@ -114,7 +118,7 @@ public class MyGameGUI implements Runnable{
 			
 			
 			
-			auto = new automaticGame(game);//create automatic and manual game for each case
+			auto = new TmpAutoGame(game);//create automatic and manual game for each case
 			manu = new manualGame(game);
 				
 			
@@ -260,7 +264,7 @@ public class MyGameGUI implements Runnable{
 			}
 		};
 		
-		t = new Timer(20, something);// for every 20 milliseconds the action above will repeat itself
+		t = new Timer(10, something);// for every 20 milliseconds the action above will repeat itself
 		t.start();
 	}
 	
@@ -300,7 +304,7 @@ public class MyGameGUI implements Runnable{
 				}
 			}
 		};
-		t = new Timer(1,something);//every millisecond it will repeat itself this action
+		t = new Timer(100,something);//every millisecond it will repeat itself this action
 		t.start();
 	}
 	/**
@@ -314,8 +318,7 @@ public class MyGameGUI implements Runnable{
 		t.stop();
 		play.join();
 		JFrame Show = new JFrame();
-		StdDraw.setCanvasSize(1,1);
-		JOptionPane.showMessageDialog(Show,"your score is :" + game.toString() );
+		JOptionPane.showMessageDialog(Show,"your score is :" + game.toString());
 	}
 	/**
 	 * This method adds the vertices to the data structure.	
@@ -353,7 +356,7 @@ public class MyGameGUI implements Runnable{
 		edge_data tmp3 = a.getEdge(src, dest);
 		double text = tmp3.getWeight();
 		text = (double)((int)(text*100)/100.0);
-		StdDraw.text((x1+x2*2)/3, (y1+y2*2)/3, String.valueOf(text));
+		//StdDraw.text((x1+x2*2)/3, (y1+y2*2)/3, String.valueOf(text));
 	}
 	
 	

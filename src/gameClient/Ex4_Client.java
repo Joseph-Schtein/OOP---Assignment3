@@ -43,7 +43,7 @@ public class Ex4_Client implements Runnable{
 	public void run() {
 		int scenario_num = 0; // current "stage is 9, can play[0,9], can NOT 10 or above
 		int id = 999;
-		//Game_Server.login(id);
+		Game_Server.login(id);
 		game_service game = Game_Server.getServer(scenario_num); // you have [0,23] games
 		
 		String g = game.getGraph();
@@ -72,7 +72,24 @@ public class Ex4_Client implements Runnable{
 			}
 		}
 		String res = game.toString();
-		String remark = "This string should be a KML file!!";
+		String remark = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+				"<projectDescription>\n" + 
+				"	<name>Ex4_v0.31</name>\n" + 
+				"	<comment></comment>\n" + 
+				"	<projects>\n" + 
+				"	</projects>\n" + 
+				"	<buildSpec>\n" + 
+				"		<buildCommand>\n" + 
+				"			<name>org.eclipse.jdt.core.javabuilder</name>\n" + 
+				"			<arguments>\n" + 
+				"			</arguments>\n" + 
+				"		</buildCommand>\n" + 
+				"	</buildSpec>\n" + 
+				"	<natures>\n" + 
+				"		<nature>org.eclipse.jdt.core.javanature</nature>\n" + 
+				"	</natures>\n" + 
+				"</projectDescription>\n" + 
+				"";
 		game.sendKML(remark); // Should be your KML (will not work on case -1).
 		System.out.println(res);
 	}
