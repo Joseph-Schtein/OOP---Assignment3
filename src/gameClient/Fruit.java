@@ -9,6 +9,7 @@ public class Fruit {
 	private Point3D pos;
 	private double value;
 	private int type;
+	private double ratio;
 	
 	
 	public Fruit(Point3D pos,double value,int type){
@@ -55,5 +56,13 @@ public class Fruit {
 		else
 			return 0;
 		
+	}
+
+	public double getRatio() {
+		return ratio;
+	}
+
+	public void setRatio(double ratio) {
+		this.ratio = ratio;
 	}
 }
