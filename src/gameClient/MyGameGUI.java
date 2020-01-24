@@ -36,7 +36,7 @@ import dataStructure.node_data;
 public class MyGameGUI implements Runnable{
 	
 	private game_service game;
-	
+	private int le;
 	private DGraph arena;
 	private Graph_Algo algo;
 	
@@ -52,6 +52,7 @@ public class MyGameGUI implements Runnable{
 	private Timer t;
 
 	private KML_Logger kml;
+	int counter = 0;
 	
 	/**
 	 * This class implements the GUI of the robot game.
@@ -69,7 +70,7 @@ public class MyGameGUI implements Runnable{
 		int id;
 		id = Integer.parseInt(JOptionPane.showInputDialog(login, " Enter ID Number:"));
 		Game_Server.login(id);
-		
+        
 		do{//only get a or A or m or m else will asking again and again
 			mode = JOptionPane.showInputDialog(f, "Enter \"M\" for Manual or \"A\" for auto: ");
 		}while(!mode.equals("A") && !mode.equals("M") && !mode.equals("a") && !mode.equals("m"));
@@ -80,7 +81,7 @@ public class MyGameGUI implements Runnable{
 		else
 			manuel = true;
 		
-		int le=-1;
+		this.le=-1;
 		do{//get number between [0-23] else will ask again and again
         	level = JOptionPane.showInputDialog(f, "Selcet level [0,23]: ");
         	le = Integer.parseInt(level);
@@ -102,7 +103,8 @@ public class MyGameGUI implements Runnable{
 			algo.init(arena);
 		
 			fruits = convertStringToFruit(game.getFruits());
-					
+			
+		
 			String info = game.toString();
 			JSONObject line;
 			
@@ -118,7 +120,7 @@ public class MyGameGUI implements Runnable{
 			
 			
 			
-			auto = new TmpAutoGame(game);//create automatic and manual game for each case
+			auto = new TmpAutoGame(game,le);//create automatic and manual game for each case
 			manu = new manualGame(game);
 				
 			
@@ -264,7 +266,7 @@ public class MyGameGUI implements Runnable{
 			}
 		};
 		
-		t = new Timer(10, something);// for every 20 milliseconds the action above will repeat itself
+		t = new Timer(20, something);// for every 20 milliseconds the action above will repeat itself
 		t.start();
 	}
 	
@@ -282,13 +284,16 @@ public class MyGameGUI implements Runnable{
 		
 		ActionListener something = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				try{
-					auto.moveRobots();//the main logic action for moving the robots
-				}
+			
+				try {
+					
+					auto.moveRobots();						
+				} catch (JSONException e2) {
+					e2.printStackTrace();
+				}//the main logic action for moving the robots
 				
-				catch(JSONException er){
-					System.out.println(er);
-				}
+						
+			
 			
 				
 				if(game.timeToEnd()<=0){
@@ -304,7 +309,15 @@ public class MyGameGUI implements Runnable{
 				}
 			}
 		};
-		t = new Timer(100,something);//every millisecond it will repeat itself this action
+			
+		int delay;
+		if(this.le !=23)
+			delay =115;
+		
+		else
+			delay = 48;
+			
+		t = new Timer(delay,something);//every millisecond it will repeat itself this action
 		t.start();
 	}
 	/**
@@ -318,7 +331,7 @@ public class MyGameGUI implements Runnable{
 		t.stop();
 		play.join();
 		JFrame Show = new JFrame();
-		JOptionPane.showMessageDialog(Show,"your score is :" + game.toString());
+		JOptionPane.showMessageDialog(Show,"your score is :" + game.toString() );
 	}
 	/**
 	 * This method adds the vertices to the data structure.	
@@ -349,14 +362,14 @@ public class MyGameGUI implements Runnable{
 		node_data tmp2 = a.getNode(dest);
 		double x2 = tmp2.getLocation().x();
 		double y2 = tmp2.getLocation().y();
-						
 		StdDraw.setPenColor(Color.BLACK);
 		StdDraw.setPenRadius(0.002);
 		StdDraw.drawArrowLine(x1, y1, x2, y2);
 		edge_data tmp3 = a.getEdge(src, dest);
 		double text = tmp3.getWeight();
 		text = (double)((int)(text*100)/100.0);
-		//StdDraw.text((x1+x2*2)/3, (y1+y2*2)/3, String.valueOf(text));
+		StdDraw.text((x1+x2*2)/3, (y1+y2*2)/3, String.valueOf(text));
+		
 	}
 	
 	
@@ -579,13 +592,13 @@ public class MyGameGUI implements Runnable{
 	public void run() {
 		while(game.isRunning()){
 			try {
-				Thread.sleep(100);
+				
 				updatePainting();
 				
 				
 			}
 			
-			catch (JSONException | InterruptedException e) {
+			catch (JSONException e) {
 				e.printStackTrace();
 			}
 		}

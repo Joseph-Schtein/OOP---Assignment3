@@ -13,11 +13,8 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.mysql.fabric.xmlrpc.base.Array;
-
 import Server.Game_Server;
 import Server.game_service;
-import Server.robot;
 import algorithms.Graph_Algo;	
 import algorithms.RobotAlgo;
 import dataStructure.DGraph;
@@ -44,8 +41,9 @@ import utils.Point3D;
 		private int robotNumber;
 		private double[][] dis;
 		private FloydWarshallSolver solver;
-		private List<List<Integer>> robotPath; 
-		
+		private List<Integer> robotPath;
+		private List<List<Integer>> robotsPath;
+		private int level;
 		/**
 		 * This method initiates the game.
 		 * Parses the "game String" in to a Json object.
@@ -55,15 +53,12 @@ import utils.Point3D;
 		 */
 		
 		
-	public TmpAutoGame(game_service game) throws JSONException{
+	public TmpAutoGame(game_service game, int level) throws JSONException{
 		this.game = game;
+		this.level = level;
 		String g = game.getGraph();
 		arena = new DGraph();
 		arena.init(g);
-		String res = game.toString();
-		String remark = "This string should be a KML file!!";
-		game.sendKML(remark); // Should be your KML (will not work on case -1).
-		System.out.println(res);
 			
 		double[][] tmp1 = new double[arena.nodeSize()][arena.nodeSize()];
 		dis = new double[arena.nodeSize()][arena.nodeSize()];
@@ -74,16 +69,20 @@ import utils.Point3D;
 		
 		algo = new Graph_Algo();
 		algo.init(arena);
+			
+		List<Integer> robot0 = new ArrayList<>();
+		List<Integer> robot1 = new ArrayList<>();
+		List<Integer> robot2 = new ArrayList<>();
+
+		robotsPath = new ArrayList<>();
 		
-		List<Integer> robot0 = new ArrayList();
-		List<Integer> robot1 = new ArrayList();
-		List<Integer> robot2 = new ArrayList();
+		robotsPath.add(robot0);
+		robotsPath.add(robot1);
+		robotsPath.add(robot2);
 
+		
+		
 		robotPath = new ArrayList<>();
-		robotPath.add(robot0);
-		robotPath.add(robot1);
-		robotPath.add(robot2);
-
 		fruits = new ArrayList<>();
 		robots = new ArrayList<>();
 			
@@ -128,16 +127,34 @@ import utils.Point3D;
 		return dis;
 	}	
 	
-	public boolean jamming(List<Integer> rp){
-		boolean jam = false;
-		if(rp.get(rp.size()-1) == rp.get(rp.size()-3) && rp.get(rp.size()-1) == rp.get(rp.size()-5))
-			if(rp.get(rp.size()-2) == rp.get(rp.size()-4) && rp.get(rp.size()-2) == rp.get(rp.size()-6)){
+	public void jamming(){
+		if(robotPath.get(robotPath.size()-1) == robotPath.get(robotPath.size()-3) && robotPath.get(robotPath.size()-1) == robotPath.get(robotPath.size()-5)) 
+			if(robotPath.get(robotPath.size()-2) == robotPath.get(robotPath.size()-4) && robotPath.get(robotPath.size()-2) == robotPath.get(robotPath.size()-6)){
 				Fruit tmp = fruits.get(0);
-				fruits.set(0, fruits.get(fruits.size()-1));
+				fruits.remove(tmp);
+				fruits.add(0, fruits.get(fruits.size()-3));
 				fruits.add(tmp);
-				jam = true;
+				
 			}
-		return jam;
+	}			
+	
+	public void exteamJam(List<Integer> rp, Robot i){
+		if(rp.get(rp.size()-1) == rp.get(rp.size()-3) && rp.get(rp.size()-2) == rp.get(rp.size()-4)){
+			if(rp.get(rp.size()-1) == 32){
+				Fruit tmp = fruits.get(0);
+				fruits.set(0, fruits.get(fruits.size()-3));
+				fruits.add(tmp);
+			}
+				
+			else{
+				List<node_data> tmp = new ArrayList<>();
+				tmp.add(arena.getNode(32));
+				tmp.add(arena.getNode(33));
+				tmp.add(arena.getNode(34));
+				i.setPath(tmp);
+					
+			}	
+		}
 	}
 	
 	public List<Fruit> findRatio(List<Fruit> fruitSet, Robot tmp){
@@ -186,9 +203,8 @@ import utils.Point3D;
 		}	
 		if(log!=null) {
 			robots = convertStringToRobot(log);//sending String and getting list of robot
-			long t = game.timeToEnd();
 			for(int i=0;i<robots.size();i++) {
-				boolean stuck = false;
+				
 				fruits = findRatio(fruits, robots.get(i));
 				String robot_json = log.get(i);
 				try {
@@ -196,11 +212,15 @@ import utils.Point3D;
 					JSONObject ttt = line.getJSONObject("Robot");
 					
 					if(robots.get(i).getDest()==-1 && (robots.size()==1 || robots.get(i).getPath() == null)) {//check if any robot need to update his path to the fruit 
+						if(robotPath.size()>6 && level != 23)
+								jamming();
 						
-						if (robotPath.get(i).size()>6)
-						stuck = jamming(robotPath.get(i));
+						else if(robotsPath.get(i).size()>4 && level == 23)
+							exteamJam(robotsPath.get(i), robots.get(i));
 						
+					
 						edge_data nextEdge = RobotAlgo.findEdge(arena, fruits.get(0));// getting the edge from the algorithm
+						
 						if(robots.get(i).getSrc() != nextEdge.getSrc()){//if the robot is on the source of the edge
 							List<Integer> pathInt = solver.reconstructShortestPath(robots.get(i).getSrc(), nextEdge.getSrc());
 							List<node_data> path = new ArrayList<>();
@@ -208,38 +228,53 @@ import utils.Point3D;
 								node_data tmp = arena.getNode(j);
 								path.add(tmp);
 							}	
-							robots.get(i).setPath(path);	
-						}	
+							if(robots.get(i).getPath()!=null && robots.get(i).getPath().get(0).getKey() == 32){
+								if(robots.get(i).getPath().get(1).getKey() == 33 || robots.get(i).getPath().get(1).getKey() == 34)
+									System.out.println("I got here");
+							}
+							
+							else
+								robots.get(i).setPath(path);
+
+						}		
 						else{
 							List<Integer> pathInt = new ArrayList<>();
 							pathInt = solver.reconstructShortestPath(robots.get(i).getSrc(), nextEdge.getDest());
 							List<node_data> path = new ArrayList<>();
+						
 							for(Integer j : pathInt){
 								node_data tmp = arena.getNode(j);
 								path.add(tmp);
 							}	
-							robots.get(i).setPath(path);
+							if(robots.get(i).getPath() != null && robots.get(i).getPath().get(0).getKey() == 32){
+								if(robots.get(i).getPath().get(1).getKey() == 33 || robots.get(i).getPath().get(1).getKey() == 34)
+									System.out.println("I got here");
+							}
+							
+							else
+								robots.get(i).setPath(path);
 						}
 					}
 					
+					
+					
+					
 					List<node_data> check = robots.get(i).getPath();//tmp variable for easy work
-					if(check != null && check.size()>1 && !stuck){// only if there isn't a path search for a new one 
-						robotPath.get(i).add(robots.get(i).getPath().get(1).getKey());
+					if(check != null && check.size()>1){// only if there isn't a path search for a new one 
+						if(level != 23)
+							robotPath.add(robots.get(i).getPath().get(1).getKey());
+						
+						
+						else if(level == 23 )
+							robotsPath.get(i).add(robots.get(i).getPath().get(1).getKey());
+						
+						
 						game.chooseNextEdge(robots.get(i).getId(), robots.get(i).getPath().get(1).getKey());
-						System.out.println("Turn to node: "+robots.get(i).getPath().get(1).getKey()+"  time to end:"+(t/1000));
-						System.out.println(ttt);
 						check.remove(1);
 						robots.get(i).setPath(check);
+						System.out.println(ttt);
 					}
-					else {
-						List<node_data> tmp = new ArrayList<node_data>();
-						tmp.add(arena.getNode(33));
-						tmp.add(arena.getNode(32));
-						tmp.add(arena.getNode(34));
-						robots.get(i).setPath(tmp);
 						
-						game.chooseNextEdge(robots.get(i).getId(), robots.get(i).getPath().get(1).getKey());						stuck = false;
-					}
 					fruits.remove(0);
 				} 
 				catch (Exception e) {
@@ -263,27 +298,13 @@ import utils.Point3D;
 			Fruit tmp = new Fruit(copyf.getLocation(),copyf.getValue(),copyf.getType());
 			tmpl.add(tmp);
 		}
-		int counter =0;
-		for(int i = 0; counter <robotNumber; i++){
-			if(i < tmpl.size()){
-				edge_data near = RobotAlgo.findEdge(arena, tmpl.get(i));
-				if(tmpl.get(i).getType()>0){
-					boolean put1 = game.addRobot(34);
-					if(put1)
-						counter++;
-				}
-					
-				else{
-					boolean put2 = game.addRobot(39);
-					if(put2)
-						counter++;
-				}	
-			}
-			else{
-				boolean put3 = game.addRobot(5);
-				if(put3)
-					counter++;
-			}
+		
+		valueComperator<Fruit> sort = new valueComperator<>();
+		tmpl.sort(sort);
+		for(Fruit f : tmpl){
+			edge_data e = RobotAlgo.findEdge(arena,f);
+			game.addRobot(e.getSrc());
+			
 		}
 	}
 
@@ -371,7 +392,28 @@ import utils.Point3D;
 			}
 			else
 				throw new IllegalArgumentException();	
-		}			
+		}
 	}
+	
+	private class valueComperator<T> implements Comparator<T>{
+
+		@Override
+		public int compare(T o1, T o2) {
+			if(o1 instanceof Fruit && o2 instanceof Fruit){
+				Fruit tmp1 = (Fruit)o1, tmp2 = (Fruit)o2;
+				if(tmp1.getValue()>tmp2.getValue()){
+					return -1;//it is intentional  -1 here because for sorting from the highest to the lowest
+				}
+				else if(tmp1.getRatio()<tmp2.getRatio()){
+					return 1;
+				}
+					
+				else
+					return 0;
+			}
+			else
+				throw new IllegalArgumentException();	
+		}	
+		}
 }
 
