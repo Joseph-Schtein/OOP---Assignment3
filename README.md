@@ -11,13 +11,13 @@ In this project we added a server that lets other players play, and then you cou
 you need to enter your ID number to connect to the server.
 
 ## How to play:
-1. Launch the game
+1. Launch the game with our new feetcherd exeJar!
 
-2. Enter your ID number (to connect to the sever. don't worry we wont steel your identity ;-) ).
+2. Enter your ID number to connect to the sever (don't worry we wont steel your identity ;-) ).
 
-2. Select mode (a for aouto, and m for manual)
+3. Select mode (a for aouto, and m for manual)
 
-3. Insert a stage (0-23 options)
+4. Insert a stage (0-23 options)
 
 ### There are two modes to play to game:
 #### Manual:
