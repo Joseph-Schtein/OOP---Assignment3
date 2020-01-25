@@ -15,7 +15,8 @@ you need to enter your ID number to connect to the server.
 
 2. Enter your ID number to connect to the sever (don't worry we wont steel your identity ;-) ).
 
-3. Select mode (a for aouto, and m for manual)
+3. Select mode (a for aouto, and m for manual) **or** enter "b" to see your higest scores or "r" to your rank among yhe other players. 
+4. Insert a stage (0-23 options).
 
 4. Insert a stage (0-23 options)
 
