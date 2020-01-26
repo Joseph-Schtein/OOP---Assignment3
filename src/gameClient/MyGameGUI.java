@@ -239,6 +239,11 @@ public class MyGameGUI implements Runnable{
 		}
 	}
 	
+	/**
+	 * This method shows all of the best scores of the player from all of the levels.
+	 * the specified levels are shown depending the number of steps requirement
+	 * and the non specified levels are shown only by the high score achieved by grade and not by moves.
+	 */
 	
 	private void myBestScore(){
 		int[] best = SimpleDB.myStats(id);
@@ -258,7 +263,10 @@ public class MyGameGUI implements Runnable{
 		}
 	}
 	
-	
+	/**
+	 * This method shows the players rank among all of the other players high score
+	 * only if they passed the level with the number of steps requirement.
+	 */
 	
 	
 	private void myRank(){
@@ -308,6 +316,7 @@ public class MyGameGUI implements Runnable{
 	
 	/**
 	 * This method starts the game as Automatic mode.
+	 * this method saves to the data bass the highest scores of every level. 
 	 * @throws JSONException
 	 */
 	
@@ -344,14 +353,17 @@ public class MyGameGUI implements Runnable{
 						int moves = ttt.getInt("moves");
 						
 						
+
 						int[] myResult = SimpleDB.myStats(id);
 						int[][] minRe = {{125,436,0,713,0,570,0,0,0,480,0,1050,0,310,0,0,235,0,0,250,200,0,0,1000}
 						,{290,580,0,580,0,500,0,0,0,580,0,580,0,580,0,0,0,290,0,0,580,290,0,0,1140}};
 
-						if(minRe[0][le]<=points && minRe[1][le]>=moves){
-//							if(myResult[le] <= points){
-							game.sendKML(kmlInfo);
-//							}
+						int minScore = minRe[0][le];
+						int maxMove = minRe[1][le];
+						if(minScore<=points && (maxMove>=moves || maxMove == 0)){
+							if(myResult[le] <= points){
+								game.sendKML(kmlInfo);
+							}
 						}
 					}
 					
@@ -364,12 +376,42 @@ public class MyGameGUI implements Runnable{
 		};
 			
 		int delay;
-		if(this.le !=16)
+		if(this.le == 0 || this.le == 1)
 			delay =115;
 		
-		else
-			delay = 110;
-			
+		else if(this.le == 3 ){
+			delay = 100;
+		}
+		
+		else if( this.le == 5){
+			delay =127;
+		}
+		
+		else if(this.le == 9 ){
+			delay = 120;
+		}
+		else if(this.le == 11){
+			delay = 140;
+		}
+		
+		else if(this.le == 13 ){
+			delay = 135;
+		}
+		
+		else if( this.le==16 ){
+			delay = 102;
+		}
+		else if(this.le ==19 || this.le ==20){
+			delay = 120;
+		}
+		else if(this.le == 23){
+			delay = 50;
+		}
+		
+		else{	
+			delay =1;
+		}
+		
 		t = new Timer(delay,something);//every millisecond it will repeat itself this action
 		t.start();
 	}

@@ -6,9 +6,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+
+import Server.Game_Server;
+import Server.game_service;
 /**
- * This class represents a MySQL Data-Base.
- * @author Yossi Schtien & Reuven Klavan
+ * This class represents a simple example of using MySQL Data-Base.
+ * Use this example for writing solution. 
+ * @author boaz.benmoshe
  *
  */
 public class SimpleDB {
@@ -22,14 +26,27 @@ public class SimpleDB {
 		if(!initiate){
 			results.put((Integer)0, new Integer[]{125, 290});
 			results.put((Integer)1, new Integer[]{436, 580});
+			results.put((Integer)2, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)3, new Integer[]{713, 580});
+			results.put((Integer)4, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)5, new Integer[]{570, 500});
+			results.put((Integer)6, new Integer[]{0, Integer.MAX_VALUE});
+			results.put((Integer)7, new Integer[]{0, Integer.MAX_VALUE});
+			results.put((Integer)8, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)9, new Integer[]{480, 580});
+			results.put((Integer)10, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)11, new Integer[]{1050, 580});
+			results.put((Integer)12, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)13, new Integer[]{310, 580});
+			results.put((Integer)14, new Integer[]{0, Integer.MAX_VALUE});
+			results.put((Integer)15, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)16, new Integer[]{235, 290});
+			results.put((Integer)17, new Integer[]{0, Integer.MAX_VALUE});
+			results.put((Integer)18, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)19, new Integer[]{250, 580});
 			results.put((Integer)20, new Integer[]{200, 290});
+			results.put((Integer)21, new Integer[]{0, Integer.MAX_VALUE});
+			results.put((Integer)22, new Integer[]{0, Integer.MAX_VALUE});
 			results.put((Integer)23, new Integer[]{1000, 1140});
 			initiate = true;
 		}	
@@ -41,12 +58,12 @@ public class SimpleDB {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-			int id1 = 205416365;  // "real" existing ID & KML
+			int id1 = 316334440;  // "real" existing ID & KML
 			int id2 = 206128613;
-			int level = 16;//1,2,3
+			int level = 17;//1,2,3
 			//printLog(id2);
 			//allUsers();	
-			String kml1 = getKML(id1,level);
+			String kml1 = getKML(id2,level);
 			System.out.println("***** KML1 file example: ******");
 			System.out.println(kml1);
 		}
@@ -111,7 +128,6 @@ public class SimpleDB {
 				return ans;
 			}
 			
-			
 		public static int allUsers() {
 			int ans = 0;
 			String allCustomersQuery = "SELECT * FROM Users;";
@@ -141,7 +157,7 @@ public class SimpleDB {
 		}
 		
 		/**
-		 * This method counts the amount of games the player have played
+		 * This method counts the amount of games played until now.
 		 * @param id
 		 * @return
 		 */
@@ -179,10 +195,8 @@ public class SimpleDB {
 	}
 	
 	/**
-	 * This method  gets ID and returns the players highest level he reached.
-	 * it returns all of the highest scores of all of the played levels.
-	 * it shows the highest score on the levels that are not in the game as well but
-	 * without a low amount of steps. 
+	 * This method returns the highest score of the specific level
+	 * only if does not have more moves then the requirement to pass the level. 
 	 * @param id
 	 * @return
 	 */
@@ -202,12 +216,12 @@ public class SimpleDB {
 		
 			ResultSet resultSet = statement.executeQuery(allCustomersQuery);
 			while(resultSet.next()){
-				
+				int score = resultSet.getInt("score");
+				int move = resultSet.getInt("moves");
 				Integer stageNumber = resultSet.getInt("levelID");
 				if(stageNumber != null){
 					Integer[] requirement = results.get(stageNumber);
-					int score = resultSet.getInt("score");
-					int move = resultSet.getInt("moves");
+					
 					
 					if(requirement[0] <= score && requirement[1] >= move){
 						minRe = true;
@@ -222,8 +236,9 @@ public class SimpleDB {
 					}
 					minRe = false;
 
-				}	
+				}
 			}
+			
 			myBest[24] = maxLevel;
 			resultSet.close();
 			statement.close();		
@@ -242,7 +257,8 @@ public class SimpleDB {
 	}
 	
 	/**
-	 * This methods shows the players rank among all of the other players (witch past) best scores.
+	 * This method shows the player rank among all of the other players
+	 * only in the specified levels.
 	 * @param id
 	 * @return
 	 */
