@@ -132,7 +132,7 @@ import utils.Point3D;
 			if(robotPath.get(robotPath.size()-2) == robotPath.get(robotPath.size()-4) && robotPath.get(robotPath.size()-2) == robotPath.get(robotPath.size()-6)){
 				Fruit tmp = fruits.get(0);
 				fruits.remove(tmp);
-				fruits.add(0, fruits.get(fruits.size()-3));
+				fruits.add(0, fruits.get(fruits.size()-1));
 				fruits.add(tmp);
 				
 			}
@@ -303,7 +303,7 @@ import utils.Point3D;
 		tmpl.sort(sort);
 		for(Fruit f : tmpl){
 			edge_data e = RobotAlgo.findEdge(arena,f);
-			game.addRobot(e.getSrc());
+			game.addRobot(e.getSrc()+5);
 			
 		}
 	}

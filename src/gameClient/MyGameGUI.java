@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,13 +46,14 @@ public class MyGameGUI implements Runnable{
 	private int robotNumber;
 	private List<Robot> robots;
 	
-	private boolean manuel;
+	private String mode;
 	private Thread play;
 	private TmpAutoGame auto;
 	private manualGame manu;
 	private Timer t;
 
 	private KML_Logger kml;
+	int id;
 	int counter = 0;
 	
 	/**
@@ -63,103 +65,100 @@ public class MyGameGUI implements Runnable{
 	public MyGameGUI() throws JSONException{
 		
 		JFrame f = new JFrame(" The Maze Waze Game ");
-		String mode = null;
+		mode = null;
 		String level;
 		
 		JFrame login = new JFrame(" The Maze Waze Game  - Login");
-		int id;
+		
 		id = Integer.parseInt(JOptionPane.showInputDialog(login, " Enter ID Number:"));
 		Game_Server.login(id);
         
 		do{//only get a or A or m or m else will asking again and again
-			mode = JOptionPane.showInputDialog(f, "Enter \"M\" for Manual or \"A\" for auto: ");
-		}while(!mode.equals("A") && !mode.equals("M") && !mode.equals("a") && !mode.equals("m"));
+			mode = JOptionPane.showInputDialog(f, "Enter \"M\" for Manual or \"A\" for auto or \"B\" for your stats and \"R\" for your rank: ");
+		}while(!mode.equals("A") && !mode.equals("M") && !mode.equals("a") && !mode.equals("m") && !mode.equals("B") && !mode.equals("b") && !mode.equals("R") && !mode.equals("r"));
 		
-		if(mode.equals("A") || mode.equals("a"))
-			manuel =false;
 		
-		else
-			manuel = true;
-		
-		this.le=-1;
-		do{//get number between [0-23] else will ask again and again
-        	level = JOptionPane.showInputDialog(f, "Selcet level [0,23]: ");
-        	le = Integer.parseInt(level);
-		}while(le<0 && le>23);
+		if(mode.equals("A") || mode.equals("a") || mode.equals("M") || mode.equals("m")){
+
+			this.le=-1;
+			do{//get number between [0-23] else will ask again and again
+				level = JOptionPane.showInputDialog(f, "Selcet level [0,23]: ");
+				le = Integer.parseInt(level);
+			}while(le<0 && le>23);
         
         
-		kml = new KML_Logger(le);// initiate KML_Logger
+			kml = new KML_Logger(le, game, id);// initiate KML_Logger
 		
 		
+			try {
+				game = Game_Server.getServer(Integer.parseInt(level));//initiate the game
+				
+				String graph = game.getGraph();
+				this.arena = new DGraph();
+				this.algo = new Graph_Algo();
 		
-		try {
-			game = Game_Server.getServer(Integer.parseInt(level));//initiate the game
+				arena.init(graph);
+				algo.init(arena);
+		
+				fruits = convertStringToFruit(game.getFruits());
 			
-			String graph = game.getGraph();
-			this.arena = new DGraph();
-			this.algo = new Graph_Algo();
 		
-			arena.init(graph);
-			algo.init(arena);
-		
-			fruits = convertStringToFruit(game.getFruits());
+				String info = game.toString();
+				JSONObject line;
 			
+				try{
+					line = new JSONObject(info);
+					JSONObject ttt = line.getJSONObject("GameServer");
+					robotNumber = ttt.getInt("robots");//getting the number of robots
+				}
 		
-			String info = game.toString();
-			JSONObject line;
+				catch (JSONException e) {e.printStackTrace();}
 			
-			try{
-				line = new JSONObject(info);
-				JSONObject ttt = line.getJSONObject("GameServer");
-				robotNumber = ttt.getInt("robots");//getting the number of robots
+			
+			
+			
+			
+				auto = new TmpAutoGame(game,le);//create automatic and manual game for each case
+				manu = new manualGame(game);
+				
+			
+			
+			
+			
+			
+				StdDraw.setPenRadius(0.03);
+				StdDraw.setPenColor(Color.MAGENTA);
+				StdDraw.setCanvasSize(1000, 500);
+				StdDraw.setXscale(35.186,35.214); 
+				StdDraw.setYscale(32.099,32.110); 
+				
+				init(graph);
+				paintingFruit(fruits);
+			
+			
+				if(mode.equals("m") || mode.equals("M"))//initiate the robot in the game (put tham on the graph)
+					manu.initiatRobot(robotNumber);
+				
+				else if (mode.equals("a") || mode.equals("A"))
+					auto.initiatRobot();
+			
+			
+			
+			
+				paintingFruit(fruits);
+				robots = convertStringToRobot(game.getRobots()); 
+				paintingRobot(robots);
+			
+			
 			}
 		
-			catch (JSONException e) {e.printStackTrace();}
-			
-			
-			
-			
-			
-			auto = new TmpAutoGame(game,le);//create automatic and manual game for each case
-			manu = new manualGame(game);
-				
-			
-			
-			
-			
-			
-			StdDraw.setPenRadius(0.03);
-			StdDraw.setPenColor(Color.MAGENTA);
-			StdDraw.setCanvasSize(1000, 500);
-			StdDraw.setXscale(35.186,35.214); 
-			StdDraw.setYscale(32.099,32.110); 
-				
-			init(graph);
-			paintingFruit(fruits);
-			
-			
-			if(manuel)//initiate the robot in the game (put tham on the graph)
-				manu.initiatRobot(robotNumber);
-				
-			else
-				auto.initiatRobot();
-			
-			
-			
-			
-			paintingFruit(fruits);
-			robots = convertStringToRobot(game.getRobots()); 
-			paintingRobot(robots);
-			
-			
-		}
-		
-		catch (Exception e){
-			e.printStackTrace();
-			System.out.println("non valid input. input of level is [0,23]");
-		}
+			catch (Exception e){
+				e.printStackTrace();
+				System.out.println("non valid input. input of level is [0,23]");
+			}
         
-		creatKMLGraph();
+			creatKMLGraph();
+		}	
         witchMode();
 	}
 
@@ -224,16 +223,53 @@ public class MyGameGUI implements Runnable{
 	 */
 	
 	public void witchMode() throws JSONException{
-		if(manuel)
+		if(mode.equals("m") || mode.equals("m"))
 			getManu();
 		
-		else{
+		else if(mode.equals("a") || mode.equals("A")){
 			getAuto();
-		}	
+		}
 		
+		else if(mode.equals("b") || mode.equals("B")){
+			myBestScore();
+		}
 		
+		else if(mode.equals("r") || mode.equals("R")){
+			myRank();
+		}
 	}
 	
+	
+	private void myBestScore(){
+		int[] best = SimpleDB.myStats(id);
+		StringBuilder bs = new StringBuilder();
+		for(int i = 0; i <= 23 ; i++){
+			bs.append("for level:  " + i + ",  you got:  " + best[i]+"\n");
+		}
+		int gamePlayed = SimpleDB.gamePlayed(id);
+		bs.append("and you have played: "+ gamePlayed);
+		if(best[24] != 23)
+			JOptionPane.showMessageDialog(null, "here is your game scores and the number of timed you played :\n"+bs.toString()+"games\n"+
+		"you didn't won yet your highest level is: " + best[24]);
+		
+		else if(best[24] == 23){
+			JOptionPane.showMessageDialog(null, "here is your game scores and the number of timed you played :\n"+bs.toString()+"games\n"+
+					"you had won the game congrats");
+		}
+	}
+	
+	
+	
+	
+	private void myRank(){
+		int[] stages = {0,1,3,5,9,11,13,16,19,20,23};
+		int[] ranks = SimpleDB.myRank(id);
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < ranks.length; i++){
+			sb.append("your position in level:  " + stages[i] + "  , is: " + ranks[i]+"\n");
+		}
+		JOptionPane.showMessageDialog(null, "here is your game scores rank: \n"+sb.toString());
+	}
 
 	/**
 	 * This method starts the game as Manual mode.
@@ -258,7 +294,7 @@ public class MyGameGUI implements Runnable{
 				if(!game.isRunning()){
 					try {
 						gameOver();
-					} catch (InterruptedException e1) {
+					} catch (InterruptedException | JSONException e1) {
 						e1.printStackTrace();
 					}
 					
@@ -299,10 +335,27 @@ public class MyGameGUI implements Runnable{
 				if(game.timeToEnd()<=0){
 					
 					try {
-						gameOver();
+						String kmlInfo = gameOver();
+						
+						String info = game.toString();
+						JSONObject line = new JSONObject(info);
+						JSONObject ttt = line.getJSONObject("GameServer");
+						int points = ttt.getInt("grade");
+						int moves = ttt.getInt("moves");
+						
+						
+						int[] myResult = SimpleDB.myStats(id);
+						int[][] minRe = {{125,436,0,713,0,570,0,0,0,480,0,1050,0,310,0,0,235,0,0,250,200,0,0,1000}
+						,{290,580,0,580,0,500,0,0,0,580,0,580,0,580,0,0,0,290,0,0,580,290,0,0,1140}};
+
+						if(minRe[0][le]<=points && minRe[1][le]>=moves){
+//							if(myResult[le] <= points){
+							game.sendKML(kmlInfo);
+//							}
+						}
 					}
 					
-					catch (InterruptedException e1) {
+					catch (InterruptedException | JSONException e1) {
 						e1.printStackTrace();
 					}
 					
@@ -311,11 +364,11 @@ public class MyGameGUI implements Runnable{
 		};
 			
 		int delay;
-		if(this.le !=23)
+		if(this.le !=16)
 			delay =115;
 		
 		else
-			delay = 48;
+			delay = 110;
 			
 		t = new Timer(delay,something);//every millisecond it will repeat itself this action
 		t.start();
@@ -324,14 +377,32 @@ public class MyGameGUI implements Runnable{
 	 * This method prints the score in the end of the game.
 	 * the info is from game.toString().
 	 * @throws InterruptedException
+	 * @throws JSONException 
 	 */
 
-	private void gameOver() throws InterruptedException{
+	private String gameOver() throws InterruptedException, JSONException{
+		
+		
+		
 		game.stopGame();
 		t.stop();
 		play.join();
 		JFrame Show = new JFrame();
-		JOptionPane.showMessageDialog(Show,"your score is :" + game.toString() );
+		JOptionPane.showMessageDialog(Show,"your stats is :" + game.toString() );
+		String kmlFile = null;
+		try {
+			kmlFile = kml.endFile();
+		} 
+		
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+		return kmlFile;
 	}
 	/**
 	 * This method adds the vertices to the data structure.	
@@ -602,12 +673,6 @@ public class MyGameGUI implements Runnable{
 				e.printStackTrace();
 			}
 		}
-		try {
-			kml.endFile();
-		} 
 		
-		catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
 	}
 }

@@ -3,9 +3,14 @@ package gameClient;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import Server.game_service;
 import utils.Point3D;
 
 
@@ -23,10 +28,14 @@ public class KML_Logger {
 	
 	private int scenario;
 	private StringBuilder kmlFile;
+	private game_service game;
+	private int id;
 	
-	public KML_Logger(int scenario){
+	public KML_Logger(int scenario, game_service game, int id){
+		this.game = game;
 		this.scenario = scenario;
 		this.kmlFile = new StringBuilder();
+		this.id = id;
 		startFile();
 		addIconStyle();
 	}
@@ -191,9 +200,11 @@ public class KML_Logger {
 	/**
 	 * This method ends, closes and saves the KML file.
 	 * @throws FileNotFoundException
+	 * @throws SQLException 
+	 * @throws JSONException 
 	 */
 	
-	public void endFile() throws FileNotFoundException{
+	public String endFile() throws FileNotFoundException, SQLException, JSONException{
 		kmlFile.append("  </Document>");//end the document segment that I open in startFile()
 		kmlFile.append("\n");
 		kmlFile.append("</kml>");//same for KML while it is not clearly see that we open it in the second line
@@ -201,7 +212,11 @@ public class KML_Logger {
 		String s = String.valueOf(scenario);
 		String output =  s + ".KML";// we send it to data file in the project
 		PrintWriter pw = new PrintWriter(new File(output)); 
+		
 		pw.write(kmlFile.toString());
 		pw.close();
+		
+		return kmlFile.toString();
+		
 	}
 }
